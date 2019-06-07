@@ -3,8 +3,11 @@ package towerRoyal.map;
 import javafx.event.EventHandler;
 import javafx.scene.Group;
 import javafx.scene.control.Label;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import towerRoyal.Main;
+import towerRoyal.Player;
+import towerRoyal.towers.Tower;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -23,6 +26,9 @@ public class Map{
     public Map(int[][] table,int length){
         this.length = length;
         this.map = new Tile[length][length];
+        this.tileHeight = (WIDTH/length);
+        this.group.setLayoutX(tileHeight*length);
+        this.group.setLayoutX(tileHeight*length);
         for(int i=0; i<length; i++){
             for(int j=0; j<length; j++){
                 map[i][j] = new Tile(
@@ -86,6 +92,38 @@ public class Map{
     public Group monitoredGroupForSettingColor() {
         this.group.setOnMouseClicked(event -> {
             this.map[(int)event.getY()/tileHeight][(int)event.getX()/tileHeight].nextColor();
+        });
+        return group;
+    }
+
+    public Group monitoredGroupForSettingTower(){
+        this.group.setOnMouseClicked(event -> {
+            Tower tower = Main.getSelectedTower();
+            Player p = Main.getSelectedPlayer();
+            Tile tile = this.map[(int)event.getY()/tileHeight][(int)event.getX()/tileHeight];
+            if(tower != null && tile.isEmpty()){
+                if((tile.getType().equals(Type.GREEN) &&
+                    tower.getType().equals(towerRoyal.towers.Type.BUILDER)) ||
+                    (tile.getType().equals(Type.BLUE) &&
+                    !tower.getType().equals(towerRoyal.towers.Type.BUILDER))){
+
+                    if(tile.getType().equals(Type.GREEN)){
+                        p.pickedBuilder();
+                    }
+                    tile.setTower(tower);
+                    tower.setTile(tile);
+                    p.removeTowerFromList(tower);
+                    Main.setSelectedPlayer(null);
+                    Main.setSelectedTower(null);
+                    ImageView imv = tower.getImageView();
+                    imv.setLayoutX(tile.getX());
+                    imv.setLayoutY(tile.getY());
+                    imv.setFitHeight(tileHeight);
+                    imv.setFitWidth(tileHeight);
+                    group.getChildren().add(imv);
+
+                }
+            }
         });
         return group;
     }
