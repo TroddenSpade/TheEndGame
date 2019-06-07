@@ -1,5 +1,6 @@
 package towerRoyal;
 
+import java.awt.*;
 import java.util.ArrayList;
 
 import javafx.application.Application;
@@ -17,6 +18,7 @@ import javafx.stage.StageStyle;
 import towerRoyal.map.Type;
 import towerRoyal.soldiers.SoldierKinds;
 import towerRoyal.map.Map;
+import towerRoyal.towers.Tower;
 
 
 public class Main extends Application {
@@ -27,29 +29,30 @@ public class Main extends Application {
 
     private Map map ;
     private Map newMap;
-    private Player p1;
+    private Player p1 = new Player();
     private Player p2;
     private Thread p1Thread;
     private Thread p2Thread;
 
+    private static Tower selectedTower;
+    private static Player selectedPlayer;
 
     public static void main(String[] args) {
         launch(args);
     }
-
 
     @Override
     public void start(Stage primaryStage){
         BorderPane startPane = new BorderPane();
         Pane mapPane = new Pane();
         TilePane pickCardsPane = new TilePane();
-        BorderPane playPane = new BorderPane();
+        BorderPane setTowers = new BorderPane();
         BorderPane createMapPane = new BorderPane();
 
         Scene startScene = new Scene(startPane, WIDTH, HEIGHT);
         Scene mapScene = new Scene(mapPane, WIDTH, HEIGHT);
         Scene pickCardsScene = new Scene(pickCardsPane,WIDTH,HEIGHT);
-        Scene playScene = new Scene(playPane,WIDTH,HEIGHT);
+        Scene playScene = new Scene(setTowers,WIDTH,HEIGHT);
         Scene createMapScene = new Scene(createMapPane,WIDTH,HEIGHT);
 
         //////////////////////// Start Screen ////////////////////////
@@ -63,9 +66,8 @@ public class Main extends Application {
             if(nameField.getText().trim().equals("")){
                 name.setText("Enter Your Name : (Field Can not be Empty!)");
             }else {
-                p1 = new Player(nameField.getText().trim());
+                p1.setName(nameField.getText().trim());
                 p1Thread = new Thread(p1);
-                playPane.setTop(p1.getPlayerPane());
                 primaryStage.setScene(mapScene);
             }
         });
@@ -73,7 +75,7 @@ public class Main extends Application {
         startPane.setCenter(input);
 
 
-        /////////////////////// Map Screen ////////////////////////
+        /////////////////////// Set Tower Map Screen ////////////////////////
         VBox parts = new VBox(100);
         VBox addMap = new VBox(5);
         VBox createMap = new VBox(5);
@@ -83,7 +85,7 @@ public class Main extends Application {
         addMapButton.setOnAction(e -> {
             try {
                 this.map = Map.read(mapNameField.getText().trim());
-                playPane.setCenter(this.map.getGroup());
+                setTowers.setCenter(this.map.monitoredGroupForSettingTower());
                 primaryStage.setScene(pickCardsScene);
             }catch (Exception ex){
                 addMapLabel.setText("Enter Name Of Your Map (Path: ./TheEndGame/Maps/)\n" + ex.getMessage());
@@ -175,17 +177,33 @@ public class Main extends Application {
         pickCardsPane.getChildren().addAll(pickLabel,list,next);
 
 
-        /////////////////////// Play Screen ////////////////////////
+        /////////////////////// Set Towers Screen ////////////////////////
+        VBox towersList = p1.getMyTowerList();
         Button playButton = new Button("Next");
         playButton.setOnAction(e->{
             p1Thread.start();
         });
-        playPane.setBottom(playButton);
+        setTowers.setBottom(playButton);
+        setTowers.setRight(towersList);
 
         primaryStage.setTitle("The End Game");
         primaryStage.setScene(startScene);
         primaryStage.show();
     }
 
+    public static void setSelectedTower(Tower tower){
+        selectedTower = tower;
+    }
 
+    public static void setSelectedPlayer(Player selectedPlayer) {
+        Main.selectedPlayer = selectedPlayer;
+    }
+
+    public static Player getSelectedPlayer() {
+        return selectedPlayer;
+    }
+
+    public static Tower getSelectedTower() {
+        return selectedTower;
+    }
 }
