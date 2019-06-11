@@ -1,4 +1,4 @@
 package towerRoyal.soldiers;
 
-public class SoldierKinds {
+public class AutoNoob {
 }
