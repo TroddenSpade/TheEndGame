@@ -7,4 +7,8 @@ public class Builder extends Tower{
                 System.getProperty("user.dir")+"/assets/"+"builder.png");
     }
 
+    @Override
+    public void run() {
+
+    }
 }
