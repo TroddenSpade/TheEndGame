@@ -1,10 +1,15 @@
 package towerRoyal.towers;
 
+import javafx.application.Platform;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
+import towerRoyal.map.Map;
 import towerRoyal.map.Tile;
+import towerRoyal.soldiers.Soldier;
 
 import java.io.FileInputStream;
 
@@ -12,22 +17,32 @@ public class Tower implements Runnable {
     public static final int IMAGE_HEIGHT = 64;
 
     private String name;
+    private int owner;
+    private double initialHealth;
     private double health;
     private double damage;
     private int energy;
     private int range;
-    private boolean working;
+    private Map map;
     private Type type;
     private Tile tile;
-    private Label nameLabel;
-    private Label damageLabel;
-    private Label rangeLabel;
-    private Label energyLabel;
     private Image image;
     private ImageView imageView;
-    private HBox box = new HBox();
+    private BorderPane towerPane = new BorderPane();
+    private ProgressBar healthBar = new ProgressBar();
+    private boolean alive = true;
+//    private Label nameLabel;
+//    private Label damageLabel;
+//    private Label rangeLabel;
+//    private Label energyLabel;
 
-    public Tower(Type type,String name,double health,int energy,int range,double damage,String image){
+
+    public Tower(Type type,
+                 String name,
+                 double health,
+                 int energy,
+                 int range, double damage, String image){
+        initialHealth = health;
         this.type = type;
         this.name = name;
         this.damage = damage;
@@ -43,18 +58,12 @@ public class Tower implements Runnable {
         }catch (Exception e){
             System.out.println(e.getMessage());
         }
-        nameLabel = new Label(name);
-        damageLabel = new Label("Damage: "+damage);
-        rangeLabel = new Label("Range: "+range);
-        energyLabel = new Label("Energy: " +energy);
-        box.getChildren().addAll(nameLabel,energyLabel,damageLabel,rangeLabel);
+//        nameLabel = new Label(name);
+//        damageLabel = new Label("Damage: "+damage);
+//        rangeLabel = new Label("Range: "+range);
+//        energyLabel = new Label("Energy: " +energy);
+//        box.getChildren().addAll(nameLabel,energyLabel,damageLabel,rangeLabel);
     }
-
-//    public Tower(double health,int energy,int range){
-//        this.energy = energy;
-//        this.health = health;
-//        this.range = range;
-//    }
 
     public Tower(Type type,double health,String image){
         this.type = type;
@@ -68,17 +77,30 @@ public class Tower implements Runnable {
             System.out.println(e.getMessage());
         }
         this.health = health;
+        initialHealth = health;
     }
 
     public void takeDamage(double damage){
         double newHealth = this.health - damage;
         if(newHealth <= 0){
-            this.working = false;
+            dead();
+            health = 0;
+        }else {
+            health = newHealth;
         }
+        healthBar.setProgress(health/initialHealth);
     }
 
-    public HBox getBox() {
-        return box;
+    public BorderPane getTowerPane(Tile tile){
+        healthBar.setProgress(1);
+        imageView.setFitHeight(tile.getHeight()-16);
+        imageView.setFitWidth(tile.getHeight());
+        healthBar.setPrefWidth(tile.getHeight());
+        towerPane.setCenter(imageView);
+        towerPane.setTop(healthBar);
+        towerPane.setLayoutX(tile.getX());
+        towerPane.setLayoutY(tile.getY());
+        return towerPane;
     }
 
     public Type getType() {
@@ -89,13 +111,37 @@ public class Tower implements Runnable {
         return imageView;
     }
 
-    public void setTile(Tile tile) {
+    public void setTile(Tile tile, Map map) {
         this.tile = tile;
+        this.map = map;
+    }
+
+    public void dead(){
+        this.alive = false;
+        Platform.runLater(()->{
+            map.removeFromPane(this.towerPane);
+        });
+        this.tile.removeTower();
+    }
+
+    public void shoot(Soldier soldier){
+        if(soldier != null){
+            soldier.takeDamage(damage);
+        }
     }
 
     @Override
     public void run() {
+        while(alive){
+            try{
+                Thread.sleep(1000);
+            } catch (Exception e){
 
+            }
+            if(alive) {
+                shoot(tile.findAnSoldier(range));
+            }
+        }
     }
 
     @Override
