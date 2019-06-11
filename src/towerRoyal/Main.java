@@ -1,6 +1,5 @@
 package towerRoyal;
 
-import java.awt.*;
 import java.util.ArrayList;
 
 import javafx.application.Application;
@@ -10,13 +9,10 @@ import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.*;
-import javafx.event.EventHandler;
 import javafx.stage.Stage;
-import javafx.scene.input.MouseEvent;
-import javafx.stage.StageStyle;
 
-import towerRoyal.map.Type;
-import towerRoyal.soldiers.SoldierKinds;
+import towerRoyal.soldiers.Soldier;
+import towerRoyal.soldiers.SoldierList;
 import towerRoyal.map.Map;
 import towerRoyal.towers.Tower;
 
@@ -30,12 +26,15 @@ public class Main extends Application {
     private Map map ;
     private Map newMap;
     private Player p1 = new Player();
-    private Player p2;
-    private Thread p1Thread;
-    private Thread p2Thread;
+    private Player p2 = new Player();
+    private Thread p1Thread = new Thread(p1);
+    private Thread p2Thread = new Thread(p2);
 
     private static Tower selectedTower;
     private static Player selectedPlayer;
+
+    private static Soldier selectedSoldier;
+    private static Player playerselectedSoldier;
 
     public static void main(String[] args) {
         launch(args);
@@ -48,12 +47,14 @@ public class Main extends Application {
         TilePane pickCardsPane = new TilePane();
         BorderPane setTowers = new BorderPane();
         BorderPane createMapPane = new BorderPane();
+        BorderPane playGroundPane = new BorderPane();
 
         Scene startScene = new Scene(startPane, WIDTH, HEIGHT);
         Scene mapScene = new Scene(mapPane, WIDTH, HEIGHT);
         Scene pickCardsScene = new Scene(pickCardsPane,WIDTH,HEIGHT);
-        Scene playScene = new Scene(setTowers,WIDTH,HEIGHT);
+        Scene setTowersScene = new Scene(setTowers,WIDTH,HEIGHT);
         Scene createMapScene = new Scene(createMapPane,WIDTH,HEIGHT);
+        Scene playGroundScene = new Scene(playGroundPane,WIDTH,HEIGHT);
 
         //////////////////////// Start Screen ////////////////////////
         VBox input = new VBox(5);
@@ -67,7 +68,6 @@ public class Main extends Application {
                 name.setText("Enter Your Name : (Field Can not be Empty!)");
             }else {
                 p1.setName(nameField.getText().trim());
-                p1Thread = new Thread(p1);
                 primaryStage.setScene(mapScene);
             }
         });
@@ -147,28 +147,34 @@ public class Main extends Application {
         Label pickLabel = new Label("Pick Cards" );
         Button next = new Button("Next");
 
-        HBox list = new HBox(10);
-        RadioButton[] radioButtons = new RadioButton[NUMBER_OF_SOLDIERS];
-        for(int i=0; i<NUMBER_OF_SOLDIERS; i++){
-            radioButtons[i] = new RadioButton(SoldierKinds.values()[i].name());
+        VBox list = new VBox(10);
+        RadioButton[] radioButtons = new RadioButton[SoldierList.NUMBER_OF_SOLDIERS];
+        for(int i=0; i<SoldierList.NUMBER_OF_SOLDIERS; i++){
+            radioButtons[i] =
+                new RadioButton(SoldierList.values()[i].getName()+"\t\t"
+                    + "Damage:"+SoldierList.values()[i].getDamage()+"\t"
+                    + "Range:"+SoldierList.values()[i].getRange()+"\t"
+                    + "Velocity:"+SoldierList.values()[i].getVelocity()+"\t"
+                    + "Health:"+SoldierList.values()[i].getHealth()+"\t"
+                    + "Energy:"+SoldierList.values()[i].getEnergy()+"\t");
             list.getChildren().add(radioButtons[i]);
         }
         next.setOnAction(e->{
             int numOfSelected = 0;
-            for(int i=0; i<NUMBER_OF_SOLDIERS; i++){
+            for(int i=0; i<SoldierList.NUMBER_OF_SOLDIERS; i++){
                 if(radioButtons[i].isSelected()){
                     numOfSelected++;
                 }
             }
             if(numOfSelected == NUMBER_OF_CARDS_FOR_PLAYER){
-                ArrayList<SoldierKinds> listOfCards = new ArrayList<>();
-                for(int i=0; i<NUMBER_OF_SOLDIERS; i++){
+                ArrayList<SoldierList> listOfCards = new ArrayList<>();
+                for(int i=0; i<SoldierList.NUMBER_OF_SOLDIERS; i++){
                     if(radioButtons[i].isSelected()){
-                        listOfCards.add(SoldierKinds.values()[i]);
+                        listOfCards.add(SoldierList.values()[i]);
                     }
                 }
-                p1.addCards(listOfCards);
-                primaryStage.setScene(playScene);
+                p1.setSoldiers(listOfCards);
+                primaryStage.setScene(setTowersScene);
 
             }else{
                 pickLabel.setText("Pick Cards (Select " + NUMBER_OF_CARDS_FOR_PLAYER + " Cards)");
@@ -179,17 +185,30 @@ public class Main extends Application {
 
         /////////////////////// Set Towers Screen ////////////////////////
         VBox towersList = p1.getMyTowerList();
-        Button playButton = new Button("Next");
+        Button playButton = new Button("Play !");
         playButton.setOnAction(e->{
+            primaryStage.setScene(playGroundScene);
+            playGroundPane.setCenter(map.monitoredGroupForSettingSoldiers());
+            playGroundPane.setBottom(p1.getPlayerPane());
+            playGroundPane.setTop(p2.getPlayerPane());
+            playGroundPane.setRight(p1.getMySoldierList());
             p1Thread.start();
+            p2Thread.start();
         });
         setTowers.setBottom(playButton);
         setTowers.setRight(towersList);
+
+
+        ////////////////////////// Play Ground ////////////////////////////
+
 
         primaryStage.setTitle("The End Game");
         primaryStage.setScene(startScene);
         primaryStage.show();
     }
+
+
+
 
     public static void setSelectedTower(Tower tower){
         selectedTower = tower;
@@ -205,5 +224,13 @@ public class Main extends Application {
 
     public static Tower getSelectedTower() {
         return selectedTower;
+    }
+
+    public static void setSelectedSoldier(Soldier selectedSoldier) {
+        Main.selectedSoldier = selectedSoldier;
+    }
+
+    public static Soldier getSelectedSoldier() {
+        return selectedSoldier;
     }
 }
