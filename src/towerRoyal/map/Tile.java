@@ -5,18 +5,34 @@ import javafx.scene.shape.Rectangle;
 import towerRoyal.Main;
 import towerRoyal.soldiers.Soldier;
 import towerRoyal.towers.Tower;
-
 import java.util.ArrayList;
 
 
 public class Tile extends Rectangle{
     private Type type;
     private Tower tower;
-    private ArrayList<Soldier> mySoldiers = new ArrayList<>();
+    private int x;
+    private int y;
+    private int length;
+    private Map map;
+    private ArrayList<Soldier> soldiers = new ArrayList<>();
     private ArrayList<Soldier> oppoSoldiers = new ArrayList<>();
 
     public Tile(Type type,int x,int y,int height){
-        super(x,y,height,height);
+        super(x*height,y*height,height,height);
+        this.x = x;
+        this.y = y;
+        this.type = type;
+        this.setFill(type.getColor());
+        this.setStroke(Color.BLACK);
+    }
+
+    public Tile(Type type,int x,int y,int height,Map map,int length){
+        super(x*height,y*height,height,height);
+        this.length = length;
+        this.map = map;
+        this.x = x;
+        this.y = y;
         this.type = type;
         this.setFill(type.getColor());
         this.setStroke(Color.BLACK);
@@ -35,8 +51,107 @@ public class Tile extends Rectangle{
         return type;
     }
 
+    public boolean hasSoldier(){
+        return soldiers.size() == 0 ? false : true;
+    }
+
+    public ArrayList<Tile> findNeighbours(){
+        ArrayList<Tile> tiles = new ArrayList<>();
+        for(int i=-1; i<2; i+=2){
+            if(y+i >= 0 && y+i <length){
+                if(map.getIntMap()[y+i][x] == 2 || map.getIntMap()[y+i][x] == 3 ){
+                    tiles.add(map.getMap()[y+i][x]);
+                }
+            }
+        }
+        for(int i=-1; i<2; i+=2){
+            if(x+i >= 0 && x+i <length){
+                if(map.getIntMap()[y][x+i] == 2 || map.getIntMap()[y][x+i] == 3){
+                    tiles.add(map.getMap()[y][x+i]);
+                }
+            }
+        }
+        return new ArrayList<Tile>(tiles);
+    }
+
+    public Soldier findAnSoldier(int range){
+        for(int i=-range; i<=range; i++){
+            if(x+i<0 || x+i>=map.getLength()){
+                continue;
+            }
+            for(int j=-range; j<=range; j++){
+                if(y+j<0 || y+j>=map.getLength()){
+                    continue;
+                }
+                if(map.getIntMap()[y+j][x+i] == 2){
+                    Soldier soldier = map.getMap()[y+j][x+i].getSoldier();
+                    if(soldier != null){
+                        return soldier;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    public Tower findAnTower(int range){
+        for(int i=-range; i<=range; i++){
+            if(x+i<0 || x+i>=map.getLength()){
+                continue;
+            }
+            for(int j=-range; j<=range; j++){
+                if(y+j<0 || y+j>=map.getLength()){
+                    continue;
+                }
+                if(map.getIntMap()[y+j][x+i] == 1){
+                    Tower tower = map.getMap()[y+j][x+i].getTower();
+                    if(tower != null){
+                        return tower;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    public Soldier getSoldier(){
+        return hasSoldier() ? soldiers.get(0) : null;
+    }
+
+    public Tower getTower(){
+        return tower;
+    }
+
     public boolean isEmpty(){
         if(tower == null){
+            return true;
+        }
+        return false;
+    }
+
+    public void removeSoldier(Soldier soldier){
+        soldiers.remove(soldier);
+    }
+
+    public void addSoldier(Soldier soldier){
+        soldiers.add(soldier);
+    }
+
+    public void removeTower(){
+        this.tower= null;
+    }
+
+
+    @Override
+    public String toString() {
+        return x + " : " + y;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        Tile newTile = (Tile)obj;
+        if(this.getX() == newTile.getX() &&
+            this.getY() == newTile.getY()){
             return true;
         }
         return false;
