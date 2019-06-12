@@ -1,8 +1,8 @@
 package towerRoyal.towers;
 
 public class Electric extends Tower{
-    public Electric(){
-        super(Type.ELECTRIC,
+    public Electric(int owner){
+        super(owner,Type.ELECTRIC,
                 "Electric",
                 1500,
                 45,

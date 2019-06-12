@@ -3,8 +3,9 @@ package towerRoyal.towers;
 public class Hospital extends Tower{
     private final double HEAL = 100;
 
-    public Hospital(){
-        super(Type.HOSPITAL,
+    public Hospital(int owner){
+        super(owner,
+                Type.HOSPITAL,
                 "Hospital",
                 2000,
                 40,

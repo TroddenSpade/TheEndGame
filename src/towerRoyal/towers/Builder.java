@@ -2,8 +2,8 @@ package towerRoyal.towers;
 
 public class Builder extends Tower{
 
-    public Builder(){
-        super(Type.BUILDER,500,
+    public Builder(int owner){
+        super(owner ,Type.BUILDER,500,
                 System.getProperty("user.dir")+"/assets/"+"builder.png");
     }
 
