@@ -16,7 +16,6 @@ public class Tile extends Rectangle{
     private int length;
     private Map map;
     private ArrayList<Soldier> soldiers = new ArrayList<>();
-    private ArrayList<Soldier> oppoSoldiers = new ArrayList<>();
 
     public Tile(Type type,int x,int y,int height){
         super(x*height,y*height,height,height);
@@ -55,15 +54,20 @@ public class Tile extends Rectangle{
         return soldiers.size() == 0 ? false : true;
     }
 
-    public ArrayList<Tile> findNeighbours(){
+    public ArrayList<Tile> findNeighbours(int id){
         ArrayList<Tile> tiles = new ArrayList<>();
+        int c = 1;
+        if(id == 1){
+            c = -1;
+        }
         for(int i=-1; i<2; i+=2){
-            if(y+i >= 0 && y+i <length){
-                if(map.getIntMap()[y+i][x] == 2 || map.getIntMap()[y+i][x] == 3 ){
-                    tiles.add(map.getMap()[y+i][x]);
+            if(y+c*i >= 0 && y+c*i <length){
+                if(map.getIntMap()[y+c*i][x] == 2 || map.getIntMap()[y+c*i][x] == 3 ){
+                    tiles.add(map.getMap()[y+c*i][x]);
                 }
             }
         }
+
         for(int i=-1; i<2; i+=2){
             if(x+i >= 0 && x+i <length){
                 if(map.getIntMap()[y][x+i] == 2 || map.getIntMap()[y][x+i] == 3){
@@ -74,7 +78,7 @@ public class Tile extends Rectangle{
         return new ArrayList<Tile>(tiles);
     }
 
-    public Soldier findAnSoldier(int range){
+    public Soldier findAnSoldier(int range,int pid){
         for(int i=-range; i<=range; i++){
             if(x+i<0 || x+i>=map.getLength()){
                 continue;
@@ -84,7 +88,7 @@ public class Tile extends Rectangle{
                     continue;
                 }
                 if(map.getIntMap()[y+j][x+i] == 2){
-                    Soldier soldier = map.getMap()[y+j][x+i].getSoldier();
+                    Soldier soldier = map.getMap()[y+j][x+i].getSoldier(pid);
                     if(soldier != null){
                         return soldier;
                     }
@@ -94,7 +98,7 @@ public class Tile extends Rectangle{
         return null;
     }
 
-    public Tower findAnTower(int range){
+    public Tower findAnTower(int range,int pid){
         for(int i=-range; i<=range; i++){
             if(x+i<0 || x+i>=map.getLength()){
                 continue;
@@ -104,7 +108,7 @@ public class Tile extends Rectangle{
                     continue;
                 }
                 if(map.getIntMap()[y+j][x+i] == 1){
-                    Tower tower = map.getMap()[y+j][x+i].getTower();
+                    Tower tower = map.getMap()[y+j][x+i].getTower(pid);
                     if(tower != null){
                         return tower;
                     }
@@ -114,12 +118,21 @@ public class Tile extends Rectangle{
         return null;
     }
 
-    public Soldier getSoldier(){
-        return hasSoldier() ? soldiers.get(0) : null;
+    public Soldier getSoldier(int pid){
+        for(Soldier soldier : soldiers){
+            if(soldier.getOwner().getPid() == pid){
+                return soldier;
+            }
+        }
+        return null;
     }
 
-    public Tower getTower(){
-        return tower;
+    public Tower getTower(int pid){
+        if(isEmpty())   return null;
+        if(tower.getOwner() == pid){
+            return tower;
+        }
+        return null;
     }
 
     public boolean isEmpty(){
