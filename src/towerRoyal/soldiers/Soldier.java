@@ -4,10 +4,12 @@ import javafx.application.Platform;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.shape.Circle;
+import towerRoyal.Player;
 import towerRoyal.map.Map;
 import towerRoyal.map.Tile;
 import towerRoyal.towers.Tower;
 
+import javax.naming.InitialContext;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -18,6 +20,7 @@ enum Type {
 public class Soldier implements Runnable{
     private static final int ONE_MINUTE = 1000;
 
+    private Player owner;
     private String name;
     private double energy;
     private double health;
@@ -31,12 +34,13 @@ public class Soldier implements Runnable{
     private Map map;
     private boolean alive = true;
     private Circle circle ;
-    private ProgressBar healthBar = new ProgressBar();
+    private ProgressBar healthBarTower = new ProgressBar();
     private BorderPane soldierPane = new BorderPane();
     public static int num =0;
     private int id ;
 
-    public Soldier(String name,double energy,double health,int velocity,double damage,int range,Type type){
+    public Soldier(Player owner,String name, double energy, double health, int velocity, double damage, int range, Type type){
+        this.owner = owner;
         this.name = name;
         this.energy = energy;
         this.health = health;
@@ -56,11 +60,29 @@ public class Soldier implements Runnable{
         }else{
             health = newHealth;
         }
-        healthBar.setProgress(health/initialHealth);
+        healthBarTower.setProgress(health/initialHealth);
+    }
+
+    public void getHeal(double extraHealth){
+        double newHealth = this.health + extraHealth;
+        if(newHealth > initialHealth){
+            health = initialHealth;
+        }else{
+            health = newHealth;
+        }
+        healthBarTower.setProgress(health/initialHealth);
     }
 
     public void setXY(double x,double y){
         this.circle = new Circle(10);
+    }
+
+    public boolean isAlive() {
+        return alive;
+    }
+
+    public Tile getTile() {
+        return tile;
     }
 
     public String getName() {
@@ -88,10 +110,14 @@ public class Soldier implements Runnable{
     }
 
     public BorderPane getSoldierPane() {
-        healthBar.setProgress(1);
-        healthBar.setPrefWidth(tile.getHeight());
+        healthBarTower.setProgress(1);
+        healthBarTower.setPrefWidth(tile.getHeight());
+        healthBarTower.getStylesheets().add("/styles/Main.css");
+        if(owner.getPid() == 0){
+            healthBarTower.getStylesheets().add("/styles/red.css");
+        }
         soldierPane.setCenter(circle);
-        soldierPane.setTop(healthBar);
+        soldierPane.setTop(healthBarTower);
         soldierPane.setLayoutX(tile.getX());
         soldierPane.setLayoutY(tile.getY());
         return soldierPane;
@@ -114,6 +140,10 @@ public class Soldier implements Runnable{
         return id;
     }
 
+    public Player getOwner() {
+        return owner;
+    }
+
     public void moveToNewTile(Tile tile){
         this.tile.removeSoldier(this);
         tile.addSoldier(this);
@@ -124,7 +154,6 @@ public class Soldier implements Runnable{
     }
 
     public void dead(){
-        Thread.currentThread().interrupt();
         alive = false;
         this.tile.removeSoldier(this);
         Platform.runLater(()->{
@@ -133,7 +162,7 @@ public class Soldier implements Runnable{
     }
 
     public void shoot(){
-        Tower tower = tile.findAnTower(range);
+        Tower tower = tile.findAnTower(range,owner.getPid());
         if(tower == null){
 
         }else{
@@ -147,11 +176,10 @@ public class Soldier implements Runnable{
         }catch (Exception e){
             System.out.println(e.getMessage());
         }
-        ArrayList<Tile> neighbours = tile.findNeighbours();
+        ArrayList<Tile> neighbours = tile.findNeighbours(owner.getPid());
         neighbours.remove(last);
         if(neighbours.size() == 0){
             dead();
-
         }else {
             moveToNewTile(neighbours.get(0));
         }
@@ -161,10 +189,9 @@ public class Soldier implements Runnable{
     @Override
     public void run() {
         while(alive){
-            Tower tower = tile.findAnTower(range);
-            if(tower == null){
-                move();
-            }else{
+            Tower tower = tile.findAnTower(range,1-owner.getPid());
+            Soldier soldier = tile.findAnSoldier(range,1-owner.getPid());
+            if(tower != null){
                 try {
                     Thread.sleep(ONE_MINUTE);
                 }catch (Exception e){
@@ -173,6 +200,17 @@ public class Soldier implements Runnable{
                 if(alive) {
                     tower.takeDamage(damage);
                 }
+            }else if(soldier != null){
+                try {
+                    Thread.sleep(ONE_MINUTE);
+                }catch (Exception e){
+                    System.out.println(e.getMessage());
+                }
+                if(alive) {
+                    soldier.takeDamage(damage);
+                }
+            }else{
+                move();
             }
         }
     }
