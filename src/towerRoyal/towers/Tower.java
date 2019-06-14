@@ -37,11 +37,13 @@ public class Tower implements Runnable {
 //    private Label energyLabel;
 
 
-    public Tower(Type type,
+    public Tower(int owner,
+                 Type type,
                  String name,
                  double health,
                  int energy,
                  int range, double damage, String image){
+        this.owner = owner;
         initialHealth = health;
         this.type = type;
         this.name = name;
@@ -65,7 +67,8 @@ public class Tower implements Runnable {
 //        box.getChildren().addAll(nameLabel,energyLabel,damageLabel,rangeLabel);
     }
 
-    public Tower(Type type,double health,String image){
+    public Tower(int owner,Type type,double health,String image){
+        this.owner = owner;
         this.type = type;
         try {
             FileInputStream fis = new FileInputStream(image);
@@ -96,6 +99,9 @@ public class Tower implements Runnable {
         imageView.setFitHeight(tile.getHeight()-16);
         imageView.setFitWidth(tile.getHeight());
         healthBar.setPrefWidth(tile.getHeight());
+        healthBar.getStylesheets().add("/styles/Main.css");
+        if(owner == 0)
+            healthBar.getStylesheets().add("/styles/red.css");
         towerPane.setCenter(imageView);
         towerPane.setTop(healthBar);
         towerPane.setLayoutX(tile.getX());
@@ -105,6 +111,22 @@ public class Tower implements Runnable {
 
     public Type getType() {
         return type;
+    }
+
+    public boolean isAlive() {
+        return alive;
+    }
+
+    public Tile getTile() {
+        return tile;
+    }
+
+    public int getRange() {
+        return range;
+    }
+
+    public int getOwner() {
+        return owner;
     }
 
     public ImageView getImageView() {
@@ -139,7 +161,7 @@ public class Tower implements Runnable {
 
             }
             if(alive) {
-                shoot(tile.findAnSoldier(range));
+                shoot(tile.findAnSoldier(range,1-owner));
             }
         }
     }
