@@ -1,5 +1,6 @@
 package towerRoyal;
 
+import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 
 import javafx.application.Application;
@@ -18,8 +19,6 @@ import towerRoyal.towers.Tower;
 
 
 public class Main extends Application {
-    private static final int NUMBER_OF_SOLDIERS = 7;
-    private static final int NUMBER_OF_CARDS_FOR_PLAYER = 4;
     private static final int HEIGHT = 800;
     private static final int WIDTH = 1000;
 
@@ -34,7 +33,6 @@ public class Main extends Application {
     private static Player selectedPlayer;
 
     private static Soldier selectedSoldier;
-    private static Player playerselectedSoldier;
 
     public static void main(String[] args) {
         launch(args);
@@ -44,34 +42,32 @@ public class Main extends Application {
     public void start(Stage primaryStage){
         BorderPane startPane = new BorderPane();
         Pane mapPane = new Pane();
-        TilePane pickCardsPane = new TilePane();
+        BorderPane pickCardsPane = new BorderPane();
         BorderPane setTowers = new BorderPane();
         BorderPane createMapPane = new BorderPane();
         BorderPane playGroundPane = new BorderPane();
 
         Scene startScene = new Scene(startPane, WIDTH, HEIGHT);
         Scene mapScene = new Scene(mapPane, WIDTH, HEIGHT);
-        Scene pickCardsScene = new Scene(pickCardsPane,WIDTH,HEIGHT);
+        Scene pickCardsScene = new Scene(pickCardsPane,WIDTH+200,HEIGHT);
         Scene setTowersScene = new Scene(setTowers,WIDTH,HEIGHT);
         Scene createMapScene = new Scene(createMapPane,WIDTH,HEIGHT);
         Scene playGroundScene = new Scene(playGroundPane,WIDTH,HEIGHT);
 
+        keyBoardController(playGroundScene);
+
         //////////////////////// Start Screen ////////////////////////
         VBox input = new VBox(5);
         Label startLabel = new Label("Start Screen");
-        Label name = new Label("Enter Your Name :");
-        TextField nameField = new TextField();
-        nameField.setPrefWidth(200);
+        HBox setName1 = new HBox(10);
+        HBox setName2 = new HBox(10);
+        p1.setName(setName1);
+        p2.setName(setName2);
         Button startButton = new Button("Start");
         startButton.setOnAction(e -> {
-            if(nameField.getText().trim().equals("")){
-                name.setText("Enter Your Name : (Field Can not be Empty!)");
-            }else {
-                p1.setName(nameField.getText().trim());
                 primaryStage.setScene(mapScene);
-            }
         });
-        input.getChildren().addAll(startLabel,name,nameField,startButton);
+        input.getChildren().addAll(startLabel,setName1,setName2,startButton);
         startPane.setCenter(input);
 
 
@@ -144,47 +140,22 @@ public class Main extends Application {
         createMapPane.setBottom(saveMapBox);
 
         /////////////////////// PickCards Screen ////////////////////////
-        Label pickLabel = new Label("Pick Cards" );
         Button next = new Button("Next");
-
-        VBox list = new VBox(10);
-        RadioButton[] radioButtons = new RadioButton[SoldierList.NUMBER_OF_SOLDIERS];
-        for(int i=0; i<SoldierList.NUMBER_OF_SOLDIERS; i++){
-            radioButtons[i] =
-                new RadioButton(SoldierList.values()[i].getName()+"\t\t"
-                    + "Damage:"+SoldierList.values()[i].getDamage()+"\t"
-                    + "Range:"+SoldierList.values()[i].getRange()+"\t"
-                    + "Velocity:"+SoldierList.values()[i].getVelocity()+"\t"
-                    + "Health:"+SoldierList.values()[i].getHealth()+"\t"
-                    + "Energy:"+SoldierList.values()[i].getEnergy()+"\t");
-            list.getChildren().add(radioButtons[i]);
-        }
+        VBox list1 = new VBox(10);
+        VBox list2 = new VBox(10);
+        SoldierList.soldierSelector(p1,list1);
+        SoldierList.soldierSelector(p2,list2);
         next.setOnAction(e->{
-            int numOfSelected = 0;
-            for(int i=0; i<SoldierList.NUMBER_OF_SOLDIERS; i++){
-                if(radioButtons[i].isSelected()){
-                    numOfSelected++;
-                }
-            }
-            if(numOfSelected == NUMBER_OF_CARDS_FOR_PLAYER){
-                ArrayList<SoldierList> listOfCards = new ArrayList<>();
-                for(int i=0; i<SoldierList.NUMBER_OF_SOLDIERS; i++){
-                    if(radioButtons[i].isSelected()){
-                        listOfCards.add(SoldierList.values()[i]);
-                    }
-                }
-                p1.setSoldiers(listOfCards);
-                primaryStage.setScene(setTowersScene);
-
-            }else{
-                pickLabel.setText("Pick Cards (Select " + NUMBER_OF_CARDS_FOR_PLAYER + " Cards)");
-            }
+            primaryStage.setScene(setTowersScene);
         });
-        pickCardsPane.getChildren().addAll(pickLabel,list,next);
+        pickCardsPane.setLeft(list1);
+        pickCardsPane.setRight(list2);
+        pickCardsPane.setBottom(next);
 
 
         /////////////////////// Set Towers Screen ////////////////////////
-        VBox towersList = p1.getMyTowerList();
+        VBox towersList1 = p1.getMyTowerList();
+        VBox towersList2 = p2.getMyTowerList();
         Button playButton = new Button("Play !");
         playButton.setOnAction(e->{
             primaryStage.setScene(playGroundScene);
@@ -192,11 +163,14 @@ public class Main extends Application {
             playGroundPane.setBottom(p1.getPlayerPane());
             playGroundPane.setTop(p2.getPlayerPane());
             playGroundPane.setRight(p1.getMySoldierList());
+            playGroundPane.setLeft(p2.getMySoldierList());
+            map.setRedTiles(p1,p2);
             p1Thread.start();
             p2Thread.start();
         });
         setTowers.setBottom(playButton);
-        setTowers.setRight(towersList);
+        setTowers.setRight(towersList1);
+        setTowers.setLeft(towersList2);
 
 
         ////////////////////////// Play Ground ////////////////////////////
@@ -207,8 +181,77 @@ public class Main extends Application {
         primaryStage.show();
     }
 
+    public void keyBoardController(Scene scene) {
+        scene.setOnKeyPressed(event -> {
+            switch (event.getCode()){
+                case DIGIT1:
+                    p1.setSelectedSoldier(p1.getSoldiers().get(0).addSoldier(p1));
+                    break;
+                case DIGIT2:
+                    p1.setSelectedSoldier(p1.getSoldiers().get(1).addSoldier(p1));
+                    break;
+                case DIGIT3:
+                    p1.setSelectedSoldier(p1.getSoldiers().get(2).addSoldier(p1));
+                    break;
+                case DIGIT4:
+                    p1.setSelectedSoldier(p1.getSoldiers().get(3).addSoldier(p1));
+                    break;
+//                case DIGIT5:
+//                    p1.setSelectedSoldier(p1.getSoldiers().get(4).addSoldier(p1));
+//                    break;
 
+                case DIGIT6:
+                    p2.setSelectedSoldier(p2.getSoldiers().get(0).addSoldier(p2));
+                    break;
+                case DIGIT7:
+                    p2.setSelectedSoldier(p2.getSoldiers().get(1).addSoldier(p2));
+                    break;
+                case DIGIT8:
+                    p2.setSelectedSoldier(p2.getSoldiers().get(2).addSoldier(p2));
+                    break;
+                case DIGIT9:
+                    p2.setSelectedSoldier(p2.getSoldiers().get(3).addSoldier(p2));
+                    break;
+//                case DIGIT0:
+//                    p2.setSelectedSoldier(p2.getSoldiers().get(4).addSoldier(p2));
+//                    break;
 
+                case Z:
+                    map.mapSetSoldierFromPlayer(p1,0);
+                    break;
+                case X:
+                    map.mapSetSoldierFromPlayer(p1,1);
+                    break;
+                case C:
+                    map.mapSetSoldierFromPlayer(p1,2);
+                    break;
+                case V:
+                    map.mapSetSoldierFromPlayer(p1,3);
+                    break;
+                case B:
+                    map.mapSetSoldierFromPlayer(p1,4);
+                    break;
+
+                case SLASH:
+                    map.mapSetSoldierFromPlayer(p2,4);
+                    break;
+                case PERIOD:
+                    map.mapSetSoldierFromPlayer(p2,3);
+                    break;
+                case COMMA:
+                    map.mapSetSoldierFromPlayer(p2,2);
+                    break;
+                case M:
+                    map.mapSetSoldierFromPlayer(p2,1);
+                    break;
+                case N:
+                    map.mapSetSoldierFromPlayer(p2,0);
+                    break;
+                default:
+                    break;
+            }
+        });
+    }
 
     public static void setSelectedTower(Tower tower){
         selectedTower = tower;
