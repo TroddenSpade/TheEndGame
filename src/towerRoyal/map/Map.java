@@ -57,6 +57,7 @@ public class Map{
         }
     }
 
+
     public static Map read(String name) throws Exception{
         File file = new File(System.getProperty("user.dir") + "/Maps/" + name + ".map");
         BufferedReader br = new BufferedReader(new FileReader(file));
@@ -129,7 +130,8 @@ public class Map{
             Player p = Main.getSelectedPlayer();
             Tile tile = this.map[(int)event.getY()/tileHeight][(int)event.getX()/tileHeight];
             if(soldier != null && !tile.hasSoldier()){
-                if(tile.getType().equals(Type.RED)){
+                if(tile.getType().equals(Type.RED)&&
+                    soldier.getOwner().decreaseEnergy(soldier.getEnergy())){
                     soldier.setTile(tile,this);
                     group.getChildren().add(soldier.getSoldierPane());
                     (new Thread(soldier)).start();
@@ -138,6 +140,38 @@ public class Map{
             }
         });
         return group;
+    }
+
+    public void mapSetSoldierFromPlayer(Player p,int numTile){
+        Soldier soldier = p.getSelectedSoldier();
+        Tile tile ;
+        try{
+            tile = p.getReds().get(numTile);
+        }catch (IndexOutOfBoundsException e){
+            return;
+        }
+        if(soldier != null && !tile.hasSoldier()){
+            if(soldier.getOwner().decreaseEnergy(soldier.getEnergy())){
+                soldier.setTile(tile,this);
+                group.getChildren().add(soldier.getSoldierPane());
+                (new Thread(soldier)).start();
+                p.setSelectedSoldier(null);
+            }
+        }
+    }
+
+    public void setRedTiles(Player p1,Player p2){
+        for(int i=0; i<length; i++) {
+            if (map[0][i].getType().equals(Type.RED)) {
+                p2.addRedTile(map[0][i]);
+            }
+        }
+
+        for(int i=0; i<length; i++){
+            if(map[length-1][i].getType().equals(Type.RED)){
+                p1.addRedTile(map[length-1][i]);
+            }
+        }
     }
 
 
