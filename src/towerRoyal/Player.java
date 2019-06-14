@@ -1,10 +1,13 @@
 package towerRoyal;
 
 import javafx.application.Platform;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.*;
 import javafx.scene.layout.TilePane;
+import towerRoyal.map.Tile;
 import towerRoyal.soldiers.AutoNoob;
 import towerRoyal.soldiers.GayGunner;
 import towerRoyal.soldiers.Soldier;
@@ -19,6 +22,7 @@ public class Player implements Runnable{
     private static final int SLEEP_TIME = 100;
     private static final int NUMBER_OF_TOWERS_FOR_EACH_PLAYER = 3;
     private static int num = 0;
+    private Soldier selectedSoldier;
 
     private int pid;
     private double extraEnergyPerSec = 2.0;
@@ -32,6 +36,7 @@ public class Player implements Runnable{
     private TilePane playerPane = new TilePane(energyBar,livesLabel,nameLabel);
     private ArrayList<SoldierList> soldiers = new ArrayList<>();
     private ArrayList<Tower> towers = new ArrayList<>();
+    private ArrayList<Tile> reds = new ArrayList<>();
     private VBox myTowerList = new VBox();
     private VBox mySoldierList = new VBox();
 
@@ -41,11 +46,11 @@ public class Player implements Runnable{
         this.energy = 0;
         energyBar.setPrefSize(200,10);
         for(int i=0; i<NUMBER_OF_TOWERS_FOR_EACH_PLAYER; i++){
-            towers.add(new Black());
-            towers.add(new Hospital());
-            towers.add(new Electric());
+            towers.add(new Black(pid));
+            towers.add(new Hospital(pid));
+            towers.add(new Electric(pid));
         }
-        towers.add(new Builder());
+        towers.add(new Builder(pid));
         for(int i=0; i<towers.size(); i++){
             myTowerList.getChildren().add(towers.get(i).getImageView());
         }
@@ -55,8 +60,11 @@ public class Player implements Runnable{
             Main.setSelectedPlayer(this);
         });
         this.mySoldierList.setOnMouseClicked(event -> {
-            Main.setSelectedSoldier(soldiers.get((int)(event.getY()/64.)).getSoldier());
+            Main.setSelectedSoldier(soldiers.get((int)(event.getY()/64.)).addSoldier(this));
         });
+        if(pid == 0){
+            playerPane.getStylesheets().add("/styles/red.css");
+        }
     }
 
     @Override
@@ -75,24 +83,61 @@ public class Player implements Runnable{
         }
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
     public String getName() {
         return name;
+    }
+
+    public int getPid() {
+        return pid;
+    }
+
+    public void setName(HBox box) {
+        Label name = new Label("Enter Your Name :");
+        TextField nameField = new TextField();
+        nameField.setPrefWidth(200);
+        Button accept = new Button("Set");
+        accept.setOnAction(e -> {
+            if(nameField.getText().trim().equals("")){
+                name.setText("Enter Your Name : (Field Can not be Empty!)");
+            }else {
+                this.name = nameField.getText().trim();
+                box.getChildren().remove(accept);
+                name.setText("Enter Your Name : (SET)");
+            }
+        });
+        box.getChildren().addAll(name,nameField,accept);
     }
 
     public double getEnergy() {
         return energy;
     }
 
+    public void setSelectedSoldier(Soldier selectedSoldier) {
+        this.selectedSoldier = selectedSoldier;
+    }
+
+    public Soldier getSelectedSoldier() {
+        return selectedSoldier;
+    }
+
     public TilePane getPlayerPane() {
         return playerPane;
     }
 
+    public ArrayList<SoldierList> getSoldiers() {
+        return soldiers;
+    }
+
     public VBox getMyTowerList() {
         return myTowerList;
+    }
+
+    public void addRedTile(Tile tile){
+        reds.add(tile);
+    }
+
+    public ArrayList<Tile> getReds() {
+        return reds;
     }
 
     public void addEnergy() {
@@ -104,11 +149,13 @@ public class Player implements Runnable{
         }
     }
 
-    public void decreaseEnergy(double val){
+    public Boolean decreaseEnergy(double val){
         double newEnergy = this.energy - val;
         if(newEnergy >= 0){
             this.energy = newEnergy ;
+            return true;
         }
+        return false;
     }
 
     public void setSoldiers(ArrayList<SoldierList> soldiers) {
@@ -126,7 +173,7 @@ public class Player implements Runnable{
         if(isGay && isNoob){
             nameLabel.setText("ooh God, "+name+" is A Noob Gay ! -_-");
         }else if(isGay){
-            nameLabel.setText(name+" is A Gay ! (Why are you gay ?)");
+            nameLabel.setText(name+" is A Gay ! (Why Ar U Gae ?)");
         }else if(isNoob){
             nameLabel.setText(name+" is A Noob ! (Noob as a bot)");
         }else{
