@@ -4,8 +4,6 @@ import javafx.application.Platform;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import towerRoyal.map.Map;
 import towerRoyal.map.Tile;
@@ -94,6 +92,16 @@ public class Tower implements Runnable {
         healthBar.setProgress(health/initialHealth);
     }
 
+    public void getHeal(double extraHealth){
+        double newHealth = this.health + extraHealth;
+        if(newHealth > initialHealth){
+            health = initialHealth;
+        }else {
+            health = newHealth;
+        }
+        healthBar.setProgress(health/initialHealth);
+    }
+
     public BorderPane getTowerPane(Tile tile){
         healthBar.setProgress(1);
         imageView.setFitHeight(tile.getHeight()-16);
@@ -116,6 +124,8 @@ public class Tower implements Runnable {
     public boolean isAlive() {
         return alive;
     }
+
+    public boolean isDamaged() {return initialHealth == health ? false : true;}
 
     public Tile getTile() {
         return tile;
@@ -161,7 +171,7 @@ public class Tower implements Runnable {
 
             }
             if(alive) {
-                shoot(tile.findAnSoldier(range,1-owner));
+                shoot(tile.findASoldier(range,1-owner));
             }
         }
     }
