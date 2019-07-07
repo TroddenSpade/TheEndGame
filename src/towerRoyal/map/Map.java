@@ -114,7 +114,9 @@ public class Map{
                     tile.setTower(tower);
                     tower.setTile(tile,this);
                     p.removeTowerFromList(tower);
-                    (new Thread(tower)).start();
+                    Thread t = new Thread(tower);
+                    t.start();
+                    p.addToThreads(t);
                     Main.setSelectedPlayer(null);
                     Main.setSelectedTower(null);
                     group.getChildren().add(tower.getTowerPane(tile));
@@ -127,14 +129,15 @@ public class Map{
     public Group monitoredGroupForSettingSoldiers() {
         this.group.setOnMouseClicked(event -> {
             Soldier soldier = Main.getSelectedSoldier();
-            Player p = Main.getSelectedPlayer();
             Tile tile = this.map[(int)event.getY()/tileHeight][(int)event.getX()/tileHeight];
             if(soldier != null && !tile.hasSoldier()){
                 if(tile.getType().equals(Type.RED)&&
                     soldier.getOwner().decreaseEnergy(soldier.getEnergy())){
                     soldier.setTile(tile,this);
                     group.getChildren().add(soldier.getSoldierPane());
-                    (new Thread(soldier)).start();
+                    Thread t = new Thread(soldier);
+                    t.start();
+                    soldier.getOwner().addToThreads(t);
                     Main.setSelectedSoldier(null);
                 }
             }
@@ -153,8 +156,11 @@ public class Map{
         if(soldier != null && !tile.hasSoldier()){
             if(soldier.getOwner().decreaseEnergy(soldier.getEnergy())){
                 soldier.setTile(tile,this);
+                tile.addSoldier(soldier);
                 group.getChildren().add(soldier.getSoldierPane());
-                (new Thread(soldier)).start();
+                Thread t = new Thread(soldier);
+                t.start();
+                p.addToThreads(t);
                 p.setSelectedSoldier(null);
             }
         }
