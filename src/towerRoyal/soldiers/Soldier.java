@@ -3,22 +3,22 @@ package towerRoyal.soldiers;
 import javafx.application.Platform;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import towerRoyal.Main;
 import towerRoyal.Player;
 import towerRoyal.map.Map;
 import towerRoyal.map.Tile;
 import towerRoyal.towers.Tower;
 
-import javax.naming.InitialContext;
 import java.util.ArrayList;
-import java.util.Random;
 
 enum Type {
     MELEE,RANGE;
 }
 
 public class Soldier implements Runnable{
-    private static final int ONE_MINUTE = 1000;
+    private static final int ONE_SECOND = 1000;
 
     private Player owner;
     private String name;
@@ -34,12 +34,16 @@ public class Soldier implements Runnable{
     private Map map;
     private boolean alive = true;
     private Circle circle ;
+    private Color color;
     private ProgressBar healthBarTower = new ProgressBar();
     private BorderPane soldierPane = new BorderPane();
     public static int num =0;
     private int id ;
 
-    public Soldier(Player owner,String name, double energy, double health, int velocity, double damage, int range, Type type){
+    public Soldier(Player owner,String name,
+                   double energy, double health,
+                   int velocity, double damage,
+                   int range, Type type,Color color){
         this.owner = owner;
         this.name = name;
         this.energy = energy;
@@ -49,6 +53,7 @@ public class Soldier implements Runnable{
         this.damage = damage;
         this.range = range;
         this.type = type;
+        this.color = color;
         id = num ++;
     }
 
@@ -80,6 +85,11 @@ public class Soldier implements Runnable{
     public boolean isAlive() {
         return alive;
     }
+
+    public boolean isWounded() {
+        return initialHealth == health ? false : true;
+    }
+
 
     public Tile getTile() {
         return tile;
@@ -117,6 +127,7 @@ public class Soldier implements Runnable{
             healthBarTower.getStylesheets().add("/styles/red.css");
         }
         soldierPane.setCenter(circle);
+        circle.setFill(this.color);
         soldierPane.setTop(healthBarTower);
         soldierPane.setLayoutX(tile.getX());
         soldierPane.setLayoutY(tile.getY());
@@ -147,6 +158,9 @@ public class Soldier implements Runnable{
     public void moveToNewTile(Tile tile){
         this.tile.removeSoldier(this);
         tile.addSoldier(this);
+        if(tile.getType().equals(towerRoyal.map.Type.RED)){
+            Main.getPlayer(1-owner.getPid()).gotHit();
+        }
         changeLast();
         changeTile(tile);
         this.soldierPane.setLayoutX(tile.getX());
@@ -161,39 +175,57 @@ public class Soldier implements Runnable{
         });
     }
 
-    public void shoot(){
-        Tower tower = tile.findAnTower(range,owner.getPid());
-        if(tower == null){
 
-        }else{
-            tower.takeDamage(damage);
-        }
+    public Tile getLast() {
+        return last;
     }
 
     public void move(){
         try {
-            Thread.sleep(ONE_MINUTE/velocity);
+            Thread.sleep(ONE_SECOND/velocity);
         }catch (Exception e){
             System.out.println(e.getMessage());
         }
-        ArrayList<Tile> neighbours = tile.findNeighbours(owner.getPid());
-        neighbours.remove(last);
-        if(neighbours.size() == 0){
-            dead();
-        }else {
-            moveToNewTile(neighbours.get(0));
+        Tower tower = tile.findATower(range,1-owner.getPid());
+        Soldier soldier = tile.findASoldier(range,1-owner.getPid());
+        if(tower != null){
+            try {
+                Thread.sleep(ONE_SECOND);
+            }catch (Exception e){
+                System.out.println(e.getMessage());
+            }
+            if(alive) {
+                tower.takeDamage(damage);
+            }
+        }else if(soldier != null){
+            try {
+                Thread.sleep(ONE_SECOND);
+            }catch (Exception e){
+                System.out.println(e.getMessage());
+            }
+            if(alive) {
+                soldier.takeDamage(damage);
+            }
+        }else{
+            ArrayList<Tile> neighbours = tile.findNeighbours(owner.getPid());
+            neighbours.remove(last);
+            if(neighbours.size() == 0){
+                dead();
+            }else {
+                moveToNewTile(neighbours.get(0));
+            }
+            neighbours.clear();
         }
-        neighbours.clear();
     }
 
     @Override
-    public void run() {
+    public void run(){
         while(alive){
-            Tower tower = tile.findAnTower(range,1-owner.getPid());
-            Soldier soldier = tile.findAnSoldier(range,1-owner.getPid());
+            Tower tower = tile.findATower(range,1-owner.getPid());
+            Soldier soldier = tile.findASoldier(range,1-owner.getPid());
             if(tower != null){
                 try {
-                    Thread.sleep(ONE_MINUTE);
+                    Thread.sleep(ONE_SECOND);
                 }catch (Exception e){
                     System.out.println(e.getMessage());
                 }
@@ -202,7 +234,7 @@ public class Soldier implements Runnable{
                 }
             }else if(soldier != null){
                 try {
-                    Thread.sleep(ONE_MINUTE);
+                    Thread.sleep(ONE_SECOND);
                 }catch (Exception e){
                     System.out.println(e.getMessage());
                 }

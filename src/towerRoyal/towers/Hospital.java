@@ -31,7 +31,7 @@ public class Hospital extends Tower{
 
             }
             if(isAlive()) {
-                heal(getTile().findAnSoldier(getRange(),getOwner()));
+                heal(getTile().findASoldier(getRange(),getOwner()));
             }
         }
     }

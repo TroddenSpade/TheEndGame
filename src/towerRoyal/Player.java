@@ -14,18 +14,20 @@ import towerRoyal.soldiers.Soldier;
 import towerRoyal.soldiers.SoldierList;
 import towerRoyal.towers.*;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public class Player implements Runnable{
+public class Player implements Runnable , Serializable {
     private static final double ONE_MINUTE = 1000;
     private static final double MAX_ENERGY = 100.0;
     private static final int SLEEP_TIME = 100;
     private static final int NUMBER_OF_TOWERS_FOR_EACH_PLAYER = 3;
     private static int num = 0;
-    private Soldier selectedSoldier;
 
+    private ArrayList<Thread> threads = new ArrayList<>();
+    private Soldier selectedSoldier;
     private int pid;
-    private double extraEnergyPerSec = 2.0;
+    private double extraEnergyPerSec = 10.0;
     private boolean running = true;
     private int lives = 3;
     private String name;
@@ -73,14 +75,29 @@ public class Player implements Runnable{
             try{
                 Thread.sleep(SLEEP_TIME);
             } catch (Exception e){
-
+                System.out.println(e.getMessage());
             }
             addEnergy();
             Platform.runLater(()->{
                 energyBar.setProgress(getEnergy()/100);
                 livesLabel.setText("Lives : " + lives);
             });
+            for (Thread thread :threads){
+                try {
+                    if(thread.isInterrupted()){
+                        System.out.println("intrup");
+                        threads.remove(thread);
+                     }
+                }catch (Exception e){
+                    System.out.println("cant remove");
+                }
+            }
         }
+        Main.stopGame();
+    }
+
+    public int getLives() {
+        return lives;
     }
 
     public String getName() {
@@ -193,4 +210,18 @@ public class Player implements Runnable{
         towers.remove(tower);
     }
 
+    public void gotHit(){
+        this.lives--;
+        if(lives == 0){
+            running = false;
+        }
+    }
+
+    public ArrayList<Thread> getThreads(){
+        return threads;
+    }
+
+    public void addToThreads(Thread thread){
+        threads.add(thread);
+    }
 }

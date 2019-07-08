@@ -13,14 +13,9 @@ import towerRoyal.Player;
 import towerRoyal.soldiers.Soldier;
 import towerRoyal.towers.Tower;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.BufferedWriter;
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.OutputStreamWriter;
+import java.io.*;
 
-public class Map{
+public class Map implements Serializable {
     private Tile[][] map;
     private int[][] intMap;
     private int length;

@@ -2,10 +2,9 @@ package towerRoyal;
 
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
@@ -13,6 +12,8 @@ import towerRoyal.soldiers.Soldier;
 import towerRoyal.soldiers.SoldierList;
 import towerRoyal.map.Map;
 import towerRoyal.towers.Tower;
+
+import java.io.*;
 
 
 public class Main extends Application {
@@ -45,6 +46,11 @@ public class Main extends Application {
     private Scene playGroundScene;
 
     public static void main(String[] args) {
+        try {
+            SocketClass.run();
+        }catch (Exception e){
+            System.out.println(e.getMessage());
+        }
         launch(args);
     }
 
@@ -146,18 +152,21 @@ public class Main extends Application {
     public void startScreen(Stage stage){
         startPane = new BorderPane();
         startScene = new Scene(startPane, WIDTH, HEIGHT);
-        VBox input = new VBox(5);
-        Label startLabel = new Label("Start Screen");
+        VBox input = new VBox(20);
         HBox setName1 = new HBox(10);
         HBox setName2 = new HBox(10);
+        setName1.setAlignment(Pos.CENTER);
+        setName2.setAlignment(Pos.CENTER);
         p1.setName(setName1);
         p2.setName(setName2);
         Button startButton = new Button("Start");
         startButton.setOnAction(e -> {
             stage.setScene(mapScene);
         });
-        input.getChildren().addAll(startLabel, setName1, setName2, startButton);
+        input.getChildren().addAll(setName1, setName2, startButton);
+        input.setAlignment(Pos.CENTER);
         startPane.setCenter(input);
+        stage.centerOnScreen();
     }
 
     public void setTowerMap(Stage stage){
@@ -188,6 +197,9 @@ public class Main extends Application {
         createMap.getChildren().addAll(createMapLabel, createMapButton);
 
         parts.getChildren().addAll(addMap, createMap);
+        parts.setAlignment(Pos.CENTER);
+        addMap.setAlignment(Pos.CENTER);
+        createMap.setAlignment(Pos.CENTER);
         mapPane.getChildren().addAll(parts);
     }
 
@@ -274,7 +286,18 @@ public class Main extends Application {
 
     public void setPlayGround(){
         playGroundPane = new BorderPane();
-        playGroundScene = new Scene(playGroundPane, WIDTH, HEIGHT);
+        MenuBar menuBar = new MenuBar();
+        Menu file = new Menu("File");
+        MenuItem save = new MenuItem("Save");
+        menuBar.getMenus().add(file);
+        file.getItems().add(save);
+        save.setOnAction(e->{
+            save();
+        });
+
+        VBox box = new VBox(menuBar,playGroundPane);
+        playGroundScene = new Scene(box, WIDTH, HEIGHT);
+//        playGroundPane.setTop(menuBar);
     }
 
     public void gameThread(Stage stage){
@@ -298,8 +321,15 @@ public class Main extends Application {
                 }
                 Button ret = new Button("return");
                 box.getChildren().addAll(label,ret);
+                box.setAlignment(Pos.CENTER);
                 pane.setCenter(box);
+                try{
+                    Thread.sleep(2000);
+                }catch (Exception e){
+                    System.out.println(e.getMessage());
+                }
                 stage.setScene(scene);
+                stage.centerOnScreen();
                 ret.setOnAction(e->{
                    initialSetting(stage);
                 });
@@ -349,5 +379,53 @@ public class Main extends Application {
         }
         p1Thread.stop();
         p2Thread.stop();
+    }
+
+    public static void save(){
+        stopGame();
+        try {
+            File file = new File(System.getProperty("user.dir")+
+                    "/saved/players");
+            FileOutputStream fos = new FileOutputStream(file);
+            ObjectOutputStream oos = new ObjectOutputStream(fos);
+            oos.writeObject(p1);
+            oos.writeObject(p2);
+            oos.close();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        try {
+            File file = new File(System.getProperty("user.dir")+
+                    "/saved/map");
+            FileOutputStream fos = new FileOutputStream(file);
+            ObjectOutputStream oos = new ObjectOutputStream(fos);
+            oos.writeObject(map);
+            oos.close();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+    public static void load(Stage stage){
+        try {
+            File file = new File(System.getProperty("user.dir")+
+                    "/saved/players");
+            FileInputStream fos = new FileInputStream(file);
+            ObjectInputStream oos = new ObjectInputStream(fos);
+            p1 = (Player) oos.readObject();
+            p2 = (Player) oos.readObject();
+            oos.close();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        try {
+            File file = new File(System.getProperty("user.dir")+
+                    "/saved/map");
+            FileInputStream fos = new FileInputStream(file);
+            ObjectInputStream oos = new ObjectInputStream(fos);
+            map = (Map) oos.readObject();
+            oos.close();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
     }
 }

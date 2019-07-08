@@ -29,7 +29,6 @@ public enum SoldierList {
 
     private Soldier soldier;
     private Image image;
-    private ImageView imageView;
 
     private final static int NUMBER_OF_SOLDIERS = 12;
     private static final int NUMBER_OF_CARDS_FOR_PLAYER = 4;
@@ -39,9 +38,6 @@ public enum SoldierList {
         try {
             FileInputStream fis = new FileInputStream(image);
             this.image = new Image(fis);
-            this.imageView = new ImageView(this.image);
-            imageView.setFitHeight(64);
-            imageView.setFitWidth(64);
         }catch (Exception e){
             System.out.println(e.getMessage());
         }
@@ -156,6 +152,9 @@ public enum SoldierList {
     }
 
     public ImageView getImageView() {
+        ImageView imageView = new ImageView(this.image);
+        imageView.setFitHeight(64);
+        imageView.setFitWidth(64);
         return imageView;
     }
 }
